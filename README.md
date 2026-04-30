@@ -1,15 +1,17 @@
 # **Dice Simulator**
 
-Roll virtual d100 and track a 20 roll average.
+Roll a virtual D100 and track your last 20 rolls along with a running average.
 
-See the program https://www.itsmetor.com/dice/
+#### How it works
+
+All logic runs in the browser — no server or PHP required.
+Roll history and statistics are stored in a browser cookie (`dice_history`) so they persist between sessions.
 
 #### To install
 
-1. copy the files to the web server
-2. create the file .history.txt 
-3. chown and chgrp the file to apache, chmod 660
+1. Copy `index.html`, `dice.js`, and `style.css` to any web server or open `index.html` directly in a browser.
 
 #### Requirements
 
-1. PHP 8.2 (may work with older versions)
+- Any modern web browser (Chrome, Firefox, Safari, Edge)
+- No PHP, no server-side dependencies

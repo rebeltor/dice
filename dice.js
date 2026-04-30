@@ -1,205 +1,167 @@
-/* create a dic object with two methods
- * roll: returns a random roll 65-100
- * rollnatural: returns a random roll 1-100
- */
-var dice = {
-  sides: 100,
-  roll: function ()
-  {
-    var randomNumber = Math.floor(Math.random() * (100 - 65)) + 65;
-    return randomNumber;
-  },
-  naturalroll: function ()
-  {
-    var randomNumber = Math.floor(Math.random() * this.sides) + 1;
-    return randomNumber;
-  }
-}
+/* -------------------------------------------------------
+ * Cookie helpers
+ * ------------------------------------------------------- */
 
-/*
- * generate a guid, this should be considered non-secure as its not necessarily
- * truly random and can be tampered with since its client side.
- * in our case, we just need something pseudo-unique
- */
-function uuidv4()
-{
-  return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
-    (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
-  );
-}
-
-// worker function for random number generator
-function getRndInteger(min, max)
-{
-  return Math.floor(Math.random() * (max - min)) + min;
-}
-
-//Prints dice roll to the page
-function updateUI(elementId, value)
-{
-  var element = document.getElementById(elementId);
-  element.innerHTML = value;
-}
-
-/*
- * helper function to set a cookie to some specific value
- */
 function setCookieValue(cookieName, value, expiryDays)
 {
-  const d = new Date();
-  d.setTime(d.getTime() + (expiryDays*24*60*60*1000));
-  let expires = "expires=" + d.toUTCString();
-  document.cookie = cookieName + "=" + value + ";" + expires + ";path=/";
+    const d = new Date();
+    d.setTime(d.getTime() + (expiryDays * 24 * 60 * 60 * 1000));
+    const expires = "expires=" + d.toUTCString();
+    document.cookie = cookieName + "=" + encodeURIComponent(value) + ";" + expires + ";path=/;SameSite=Strict";
 }
 
-/*
- * helper function to get the value of the cookie
- */
 function getCookieValue(cookieName)
 {
-  let name = cookieName + "=";
-  let decodedCookie = decodeURIComponent(document.cookie);
-  let cookieArry = decodedCookie.split(';');
+    const name = cookieName + "=";
+    const decodedCookie = decodeURIComponent(document.cookie);
+    const cookieArray = decodedCookie.split(';');
 
-  // search through the string array that is the cookie
-  for(let i = 0; i < cookieArry.length; i++)
-  {
-    let c = cookieArry[i];
-    while (c.charAt(0) == ' ')
+    for (let i = 0; i < cookieArray.length; i++)
     {
-      c = c.substring(1);
+        let c = cookieArray[i].trimStart();
+        if (c.indexOf(name) === 0)
+        {
+            return c.substring(name.length, c.length);
+        }
     }
-    // if we have a match then return the value
-    if (c.indexOf(name) == 0)
-    {
-      return c.substring(name.length, c.length);
-    }
-  }
-  return "";
+    return "";
 }
 
+/* -------------------------------------------------------
+ * History stored in a cookie as a comma-separated list
+ * e.g. "45,67,23,89,12"  (newest at the end)
+ * ------------------------------------------------------- */
+
+const HISTORY_COOKIE = 'dice_history';
+const MAX_HISTORY    = 20;
+const COOKIE_DAYS    = 365;
+
+function getHistory()
+{
+    const val = getCookieValue(HISTORY_COOKIE);
+    if (!val) return [];
+    return val.split(',').map(Number);
+}
+
+function saveHistory(history)
+{
+    setCookieValue(HISTORY_COOKIE, history.join(','), COOKIE_DAYS);
+}
+
+function addRoll(roll)
+{
+    const history = getHistory();
+    history.push(roll);
+    if (history.length > MAX_HISTORY)
+    {
+        history.shift();
+    }
+    saveHistory(history);
+    return history;
+}
+
+function clearHistory()
+{
+    setCookieValue(HISTORY_COOKIE, '', -1);
+}
+
+/* -------------------------------------------------------
+ * Statistics
+ * ------------------------------------------------------- */
+
+function getAverage(history)
+{
+    if (history.length === 0) return null;
+    const sum = history.reduce((a, b) => a + b, 0);
+    return parseFloat((sum / history.length).toFixed(2));
+}
+
+/* -------------------------------------------------------
+ * UI helpers
+ * ------------------------------------------------------- */
 
 /*
- * check for a cookie, if not set then initialize
+ * colour-codes a roll badge based on its value
+ * 90-100: critical (red)  |  70-89: high (amber)
+ * 40-69:  mid (green)     |  1-39:  low (indigo)
  */
-function checkAndSetCookie()
+function getRollClass(n)
 {
-    // get the cookie value
-    let cookieValue = getCookieValue("dice");
-    // if its not set then initialize to a pseudo random value for this browser
-    // otherwise use what was previously set
-    if (cookieValue != "")
-    {
-        // return what we have
-        return cookieValue;
-    }
-    else
-    {
-         // set a value
-         let guid = uuidv4();
-         setCookieValue("dice", guid, 7);
-         return guid;
-    }
+    if (n >= 90) return 'roll-critical';
+    if (n >= 70) return 'roll-high';
+    if (n >= 40) return 'roll-mid';
+    return 'roll-low';
 }
 
-// get the button and register the click event
-var button = document.getElementById('button');
-
-button.onclick = function()
+function renderHistory(history)
 {
-    // call the random number generation in javascript
-    //var die = dice.naturalroll();
-    //updateDie(die, 'die');
+    const el = document.getElementById('history');
+    if (history.length === 0)
+    {
+        el.innerHTML = '<p class="no-history">No rolls yet</p>';
+        return;
+    }
 
-    // change the css of the die element to turn animation on
-    var element = document.getElementById("die");
-    element.className="tile appearance shadow-animate";
+    // show newest first
+    el.innerHTML = history.slice().reverse().map((n, idx) =>
+        `<span class="roll-badge ${getRollClass(n)}${idx === 0 ? ' roll-latest' : ''}" title="Roll: ${n}">${n}</span>`
+    ).join('');
+}
 
-    // start a timer, when the timer hits zero change the animations off
-    var timeleft = 5;
+function renderStats(history)
+{
+    const avg = getAverage(history);
+    document.getElementById('average').textContent = avg !== null ? avg : '—';
+    document.getElementById('count').textContent   = history.length;
+}
 
-    // timer runs every second asynchronously
-    // when the timer hits zero the animations are disabled and the timer cleared
-    var downloadTimer = setInterval(
-        function function1()
-        {
-            timeleft -= 1;
-            if(timeleft <= 0)
-            {
-                clearInterval(downloadTimer);
+function refreshUI(history)
+{
+    renderHistory(history);
+    renderStats(history);
+}
 
-                var element = document.getElementById("die");
-                element.className="tile appearance";
-            }
-        },
-        1000
-    );
+/* -------------------------------------------------------
+ * Roll – pure JavaScript, no server needed
+ * ------------------------------------------------------- */
 
-    // get this browsers pseudo-unique id
-    let browserId = checkAndSetCookie();
+function naturalRoll()
+{
+    return Math.floor(Math.random() * 100) + 1;
+}
 
-    // call the random number generation in PHP first
-    var input = { action: 'natural_roll', browserId: browserId };
+/* -------------------------------------------------------
+ * Initialise on DOMContentLoaded
+ * ------------------------------------------------------- */
 
-    $.post(
-        "https://www.itsmetor.com/dice/dice.php",
-        input,
-        function(response)
-        {
-            if(response != "")
-            {
-                // natural roll success, update the UI
-                updateUI("die", response);
+document.addEventListener('DOMContentLoaded', function()
+{
+    // populate stats from saved cookie history on page load
+    refreshUI(getHistory());
 
-                // now that data is generated, fetch the history and avg async
-                input = { action: 'get_history', browserId: browserId };
+    // roll button
+    document.getElementById('rollBtn').addEventListener('click', function()
+    {
+        const roll = naturalRoll();
 
-                $.post(
-                    "https://www.itsmetor.com/dice/dice.php",
-                    input,
-                    function(response)
-                    {
-                        if(response != "")
-                        {
-                            // history fetch success, or possible PHP error
-                            // update the UI
-                            updateUI("history", response);
-                        }
-                        else
-                        {
-                            // history fetch error in PHP, log to console for debug
-                            console.log('Error, fetching history...');
-                        }
-                    }
-                );
+        // animate the die
+        const dieEl = document.getElementById('die');
+        dieEl.classList.remove('rolling');
+        // force reflow so the animation restarts if clicked rapidly
+        void dieEl.offsetWidth;
+        dieEl.classList.add('rolling');
+        dieEl.textContent = roll;
 
-                // avg can fetch same time as get history since data is already created
-                input = { action: 'get_average', browserId: browserId };
-                $.post(
-                    "https://www.itsmetor.com/dice/dice.php",
-                    input,
-                    function(response)
-                    {
-                        if(response != "")
-                        {
-                            // avg fetch success or possible PHP error
-                            // update the UI
-                            updateUI("average", "Avg: " + response);
-                        }
-                        else
-                        {
-                            // avg calc error in PHP, log to console for debug
-                            console.log('Error, fetching average...');
-                        }
-                    }
-                );
-            }
-            else
-            {
-                // natural roll error, log to console for debug
-                console.log('Error, fetching roll');
-            }
-        }
-    );
+        // save and refresh UI
+        refreshUI(addRoll(roll));
+    });
 
-};
+    // clear history button
+    document.getElementById('clearBtn').addEventListener('click', function()
+    {
+        clearHistory();
+        refreshUI([]);
+        document.getElementById('die').textContent = '?';
+        document.getElementById('die').classList.remove('rolling');
+    });
+});

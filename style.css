@@ -1,55 +1,286 @@
-* {
-  font-family: Helvetica, Arial, sans-serif;
-  text-align: center;
+/* -------------------------------------------------------
+ * Design tokens
+ * ------------------------------------------------------- */
+:root {
+  --bg:            #0f0e17;
+  --surface:       #1a1a2e;
+  --card:          #1e2140;
+  --card-border:   rgba(255, 255, 255, 0.07);
+  --accent:        #7c3aed;
+  --accent-light:  #a78bfa;
+  --text:          #fffffe;
+  --text-muted:    #a7a9be;
+
+  /* roll badge colours */
+  --critical-bg:   rgba(239,  68,  68, 0.15);
+  --critical-fg:   #f87171;
+  --critical-bd:   rgba(239,  68,  68, 0.35);
+  --high-bg:       rgba(245, 158,  11, 0.15);
+  --high-fg:       #fbbf24;
+  --high-bd:       rgba(245, 158,  11, 0.35);
+  --mid-bg:        rgba( 16, 185, 129, 0.15);
+  --mid-fg:        #34d399;
+  --mid-bd:        rgba( 16, 185, 129, 0.35);
+  --low-bg:        rgba( 99, 102, 241, 0.15);
+  --low-fg:        #818cf8;
+  --low-bd:        rgba( 99, 102, 241, 0.35);
 }
-button {
-  background-color: rgb(82, 186, 179);
-  border-radius: 6px;
-  border: none;
-  color: rgb(255, 255, 255);
-  padding: 10px;
-  text-transform: uppercase;
-  width: 200px;
-  height: 100px;
-  cursor: pointer;
-  font-size: 60px;
-}
-.tile {
-  display: inline-block;
-  vertical-align: top;
-  height: 100px;
-  width: 100px;
-  padding: 50px;
-  margin: 50px auto;
-  border: 1px solid gray;
-  border-radius: 10px;
-  font-size:80px;
-}
-.appearance {
-  background-color: coral;
-}
-h2 {
+
+/* -------------------------------------------------------
+ * Reset / base
+ * ------------------------------------------------------- */
+*, *::before, *::after {
   margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
-.tile.shadow-animate {
-  box-shadow: 0px 0px 20px 10px coral;
-  animation: shadows 1s infinite;
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 2rem 1rem 4rem;
 }
-@keyframes shadows {
-  0% {
-    text-shadow: pink 0 0 10px;
-    box-shadow: 0px 0px 20px 10px pink;
-  }
-  50% {
-    text-shadow: orange 0 0 10px;
-    box-shadow: 0px 0px 20px 10px orange;
-  }
-  75% {
-    text-shadow: red 0 0 10px;
-    box-shadow: 0px 0px 20px 10px red;
-  }
-  100% {
-    text-shadow: yellow 0 0 10px;
-    box-shadow: 0px 0px 20px 10px yellow;
-  }
+
+/* -------------------------------------------------------
+ * Layout
+ * ------------------------------------------------------- */
+.container {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+h1 {
+  font-size: 1.75rem;
+  font-weight: 800;
+  text-align: center;
+  margin: 0.5rem 0;
+  background: linear-gradient(135deg, var(--accent-light), #c4b5fd);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 0.05em;
+}
+
+.card {
+  background: var(--card);
+  border-radius: 20px;
+  padding: 1.5rem;
+  border: 1px solid var(--card-border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* -------------------------------------------------------
+ * Die card
+ * ------------------------------------------------------- */
+.die-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.die {
+  width: 140px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 28px;
+  background: linear-gradient(135deg, var(--accent), #4f46e5);
+  font-size: 3.75rem;
+  font-weight: 900;
+  color: #fff;
+  user-select: none;
+  box-shadow: 0 4px 24px rgba(124, 58, 237, 0.4);
+  transition: box-shadow 0.3s ease;
+}
+
+.die.rolling {
+  animation: dieRoll 0.45s ease-out, dieGlow 0.9s ease-out;
+}
+
+@keyframes dieRoll {
+  0%   { transform: rotate(-12deg) scale(0.88); }
+  55%  { transform: rotate(6deg)  scale(1.12); }
+  100% { transform: rotate(0deg)  scale(1); }
+}
+
+@keyframes dieGlow {
+  0%   { box-shadow: 0 0 0  0   rgba(124, 58, 237, 0.7); }
+  60%  { box-shadow: 0 0 0 22px rgba(124, 58, 237, 0); }
+  100% { box-shadow: 0 4px 24px rgba(124, 58, 237, 0.4); }
+}
+
+#rollBtn {
+  width: 100%;
+  padding: 0.875rem;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--accent), #4f46e5);
+  color: #fff;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+#rollBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(124, 58, 237, 0.5);
+}
+
+#rollBtn:active {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+/* -------------------------------------------------------
+ * Stats card
+ * ------------------------------------------------------- */
+.stats-card {
+  display: flex;
+  gap: 1rem;
+}
+
+.stat {
+  flex: 1;
+  text-align: center;
+  padding: 0.875rem 0.5rem;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 14px;
+  border: 1px solid var(--card-border);
+}
+
+.stat-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 0.35rem;
+}
+
+.stat-value {
+  display: block;
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: var(--accent-light);
+  line-height: 1;
+}
+
+/* -------------------------------------------------------
+ * History card
+ * ------------------------------------------------------- */
+.history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.history-card h2 {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+}
+
+.clear-btn {
+  background: transparent;
+  border: 1px solid var(--card-border);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.clear-btn:hover {
+  color: var(--text);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.history-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+}
+
+.no-history {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  align-self: center;
+}
+
+/* -------------------------------------------------------
+ * Roll badges
+ * ------------------------------------------------------- */
+.roll-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  transition: transform 0.15s ease;
+}
+
+.roll-badge:hover {
+  transform: scale(1.1);
+}
+
+/* highlight the most-recent roll */
+.roll-latest {
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 1px;
+}
+
+.roll-critical {
+  background: var(--critical-bg);
+  color: var(--critical-fg);
+  border: 1px solid var(--critical-bd);
+}
+
+.roll-high {
+  background: var(--high-bg);
+  color: var(--high-fg);
+  border: 1px solid var(--high-bd);
+}
+
+.roll-mid {
+  background: var(--mid-bg);
+  color: var(--mid-fg);
+  border: 1px solid var(--mid-bd);
+}
+
+.roll-low {
+  background: var(--low-bg);
+  color: var(--low-fg);
+  border: 1px solid var(--low-bd);
+}
+
+/* -------------------------------------------------------
+ * Responsive tweaks
+ * ------------------------------------------------------- */
+@media (max-width: 380px) {
+  .die { width: 120px; height: 120px; font-size: 3rem; }
+  .stat-value { font-size: 1.6rem; }
 }
