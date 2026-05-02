@@ -1,11 +1,24 @@
 # **Dice Simulator**
 
-Roll a virtual D100 and track your last 20 rolls along with a running average.
+Roll a virtual D100 and track your last 20 rolls along with running statistics.
+
+![D100 Dice Roller](screenshot.png)
 
 #### How it works
 
 All logic runs in the browser — no server or PHP required.
-Roll history and statistics are stored in a browser cookie (`dice_history`) so they persist between sessions.
+Roll history is stored in `localStorage` so it persists between sessions.
+
+Statistics tracked: average, total rolls, best roll, and worst roll.
+
+Rolls are colour-coded by tier:
+
+| Range  | Tier     |
+|--------|----------|
+| 96–100 | Critical |
+| 65–95  | Decent   |
+| 6–64   | Lame     |
+| 1–5    | Fumble   |
 
 #### To install
 
