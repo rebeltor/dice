@@ -1,67 +1,56 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>Dice Simulator</title>
+    <meta charset="UTF-8">
+    <title>D100 Dice Roller</title>
     <link rel="stylesheet" href="style.css">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.js"></script>
-    <script>
-    /* once the document loads, set the history and average */
-    $(document).ready(
-        function()
-        {
-            /*
-             * generate a pseudo-random identifier for this session
-             * use this value to track the rolls, history and average for this user
-            */
-            let browserId = checkAndSetCookie();
-
-            var input = { action: 'get_history', browserId: browserId };
-            $.post(
-                "https://www.itsmetor.com/dice/dice.php",
-                input,
-                function(response)
-                {
-                    if(response != "")
-                    {
-                        updateUI("history", response);
-                    }
-                }
-            );
-
-            input = { action: 'get_average', browserId: browserId };
-            $.post(
-                "https://www.itsmetor.com/dice/dice.php",
-                input,
-                function(response)
-                {
-                    if(response != "")
-                    {
-                        updateUI("average", response);
-                    }
-                    else
-                    {
-                        console.log('Error, fetching history...');
-                    }
-                }
-            );
-        }
-    );
-    </script>
 </head>
 <body>
-    <!-- the main die tile, this updates when the button is clicked -->
-    <div id="die" class="tile appearance">
+    <div class="container">
+        <h1>D100 Dice Roller</h1>
 
-    </div><br/>
+        <div class="card die-card">
+            <div id="die" class="die">?</div>
+            <button id="rollBtn">Roll D100</button>
+        </div>
 
-    <!-- the button click triggers the roll and UI updates -->
-    <button id="button">Roll</button><br/><br/>
+        <div class="card stats-card">
+            <div class="stat">
+                <span class="stat-label">Average</span>
+                <span id="stat-avg" class="stat-value">—</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Rolls</span>
+                <span id="stat-count" class="stat-value">0</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Best</span>
+                <span id="stat-max" class="stat-value stat-best">—</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Worst</span>
+                <span id="stat-min" class="stat-value stat-worst">—</span>
+            </div>
+        </div>
+
+        <div class="card history-card">
+            <div class="history-header">
+                <h2>History <span class="history-sub">(last 20)</span></h2>
+                <button id="clearBtn" class="clear-btn">Clear</button>
+            </div>
+            <div id="history" class="history-list">
+                <p class="no-history">No rolls yet</p>
+            </div>
+            <div class="legend">
+                <span class="legend-item roll-critical">96–100 Critical</span>
+                <span class="legend-item roll-decent">65–95 Decent</span>
+                <span class="legend-item roll-lame">6–64 Lame</span>
+                <span class="legend-item roll-fumble">1–5 Fumble</span>
+            </div>
+        </div>
+    </div>
+
     <script src="dice.js"></script>
-
-    <!-- the history and average UI elements for tracking usage -->
-    <h2>History</h2>
-    <div id="history"></div><br/><br/>
-    <h2>Average</h2>
-    <div id="average"></div>
 </body>
 </html>
