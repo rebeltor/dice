@@ -11,19 +11,25 @@
   --text:          #fffffe;
   --text-muted:    #a7a9be;
 
-  /* roll badge colours */
-  --critical-bg:   rgba(239,  68,  68, 0.15);
-  --critical-fg:   #f87171;
-  --critical-bd:   rgba(239,  68,  68, 0.35);
-  --high-bg:       rgba(245, 158,  11, 0.15);
-  --high-fg:       #fbbf24;
-  --high-bd:       rgba(245, 158,  11, 0.35);
-  --mid-bg:        rgba( 16, 185, 129, 0.15);
-  --mid-fg:        #34d399;
-  --mid-bd:        rgba( 16, 185, 129, 0.35);
-  --low-bg:        rgba( 99, 102, 241, 0.15);
-  --low-fg:        #818cf8;
-  --low-bd:        rgba( 99, 102, 241, 0.35);
+  /* critical — gold (good!) */
+  --critical-bg:   rgba(245, 158,  11, 0.15);
+  --critical-fg:   #fbbf24;
+  --critical-bd:   rgba(245, 158,  11, 0.45);
+
+  /* decent — emerald */
+  --decent-bg:     rgba( 16, 185, 129, 0.15);
+  --decent-fg:     #34d399;
+  --decent-bd:     rgba( 16, 185, 129, 0.35);
+
+  /* lame — slate */
+  --lame-bg:       rgba(100, 116, 139, 0.15);
+  --lame-fg:       #94a3b8;
+  --lame-bd:       rgba(100, 116, 139, 0.35);
+
+  /* fumble — red (bad!) */
+  --fumble-bg:     rgba(239,  68,  68, 0.15);
+  --fumble-fg:     #f87171;
+  --fumble-bd:     rgba(239,  68,  68, 0.35);
 }
 
 /* -------------------------------------------------------
@@ -102,8 +108,21 @@ h1 {
   transition: box-shadow 0.3s ease;
 }
 
+/* base roll animation (decent / lame) */
 .die.rolling {
   animation: dieRoll 0.45s ease-out, dieGlow 0.9s ease-out;
+}
+
+/* critical — joyful bounce + golden burst */
+.die.die-critical.rolling {
+  animation: dieCriticalBounce 0.75s cubic-bezier(.36,.07,.19,.97) both,
+             dieCriticalGlow   1.4s ease-out;
+}
+
+/* fumble — anguished shake + red flash */
+.die.die-fumble.rolling {
+  animation: dieFumbleShake 0.7s ease-out,
+             dieFumbleFlash 1.0s ease-out;
 }
 
 @keyframes dieRoll {
@@ -117,6 +136,45 @@ h1 {
   60%  { box-shadow: 0 0 0 22px rgba(124, 58, 237, 0); }
   100% { box-shadow: 0 4px 24px rgba(124, 58, 237, 0.4); }
 }
+
+@keyframes dieCriticalBounce {
+  0%   { transform: scale(0.85) rotate(-8deg); }
+  30%  { transform: scale(1.35) rotate(6deg); }
+  50%  { transform: scale(0.95) rotate(-3deg); }
+  70%  { transform: scale(1.15) rotate(2deg); }
+  85%  { transform: scale(0.98) rotate(-1deg); }
+  100% { transform: scale(1)    rotate(0deg); }
+}
+
+@keyframes dieCriticalGlow {
+  0%   { box-shadow: 0 0 0  0   rgba(245, 158, 11, 0.9); }
+  40%  { box-shadow: 0 0 0 36px rgba(245, 158, 11, 0.0); }
+  100% { box-shadow: 0 4px 28px rgba(245, 158, 11, 0.55); }
+}
+
+@keyframes dieFumbleShake {
+  0%   { transform: translateX(0)    rotate(0deg); }
+  12%  { transform: translateX(-14px) rotate(-6deg); }
+  25%  { transform: translateX(14px)  rotate(6deg); }
+  37%  { transform: translateX(-11px) rotate(-4deg); }
+  50%  { transform: translateX(11px)  rotate(4deg); }
+  62%  { transform: translateX(-7px)  rotate(-2deg); }
+  75%  { transform: translateX(7px)   rotate(2deg); }
+  87%  { transform: translateX(-3px)  rotate(-1deg); }
+  100% { transform: translateX(0)    rotate(0deg); }
+}
+
+@keyframes dieFumbleFlash {
+  0%   { box-shadow: 0 0 0  0   rgba(239, 68, 68, 0.9); }
+  40%  { box-shadow: 0 0 0 30px rgba(239, 68, 68, 0.0); }
+  100% { box-shadow: 0 4px 24px rgba(239, 68, 68, 0.45); }
+}
+
+/* die color states */
+.die.die-critical { background: linear-gradient(135deg, #f59e0b, #b45309); }
+.die.die-decent   { background: linear-gradient(135deg, #10b981, #0d9488); }
+.die.die-lame     { background: linear-gradient(135deg, #475569, #334155); }
+.die.die-fumble   { background: linear-gradient(135deg, #ef4444, #b91c1c); }
 
 #rollBtn {
   width: 100%;
@@ -144,15 +202,15 @@ h1 {
 }
 
 /* -------------------------------------------------------
- * Stats card
+ * Stats card — 2×2 grid
  * ------------------------------------------------------- */
 .stats-card {
-  display: flex;
-  gap: 1rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
 }
 
 .stat {
-  flex: 1;
   text-align: center;
   padding: 0.875rem 0.5rem;
   background: rgba(255, 255, 255, 0.04);
@@ -162,7 +220,7 @@ h1 {
 
 .stat-label {
   display: block;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -177,6 +235,9 @@ h1 {
   color: var(--accent-light);
   line-height: 1;
 }
+
+.stat-best  { color: var(--critical-fg); } /* gold */
+.stat-worst { color: var(--fumble-fg); }  /* red */
 
 /* -------------------------------------------------------
  * History card
@@ -194,6 +255,14 @@ h1 {
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: var(--text-muted);
+}
+
+.history-sub {
+  font-size: 0.65rem;
+  font-weight: 400;
+  opacity: 0.6;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 .clear-btn {
@@ -243,38 +312,36 @@ h1 {
   transition: transform 0.15s ease;
 }
 
-.roll-badge:hover {
-  transform: scale(1.1);
-}
+.roll-badge:hover { transform: scale(1.1); }
 
-/* highlight the most-recent roll */
 .roll-latest {
   outline: 2px solid rgba(255, 255, 255, 0.5);
   outline-offset: 1px;
 }
 
-.roll-critical {
-  background: var(--critical-bg);
-  color: var(--critical-fg);
-  border: 1px solid var(--critical-bd);
+.roll-critical { background: var(--critical-bg); color: var(--critical-fg); border: 1px solid var(--critical-bd); }
+.roll-decent   { background: var(--decent-bg);   color: var(--decent-fg);   border: 1px solid var(--decent-bd); }
+.roll-lame     { background: var(--lame-bg);     color: var(--lame-fg);     border: 1px solid var(--lame-bd); }
+.roll-fumble   { background: var(--fumble-bg);   color: var(--fumble-fg);   border: 1px solid var(--fumble-bd); }
+
+/* -------------------------------------------------------
+ * Legend
+ * ------------------------------------------------------- */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 1rem;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--card-border);
 }
 
-.roll-high {
-  background: var(--high-bg);
-  color: var(--high-fg);
-  border: 1px solid var(--high-bd);
-}
-
-.roll-mid {
-  background: var(--mid-bg);
-  color: var(--mid-fg);
-  border: 1px solid var(--mid-bd);
-}
-
-.roll-low {
-  background: var(--low-bg);
-  color: var(--low-fg);
-  border: 1px solid var(--low-bd);
+.legend-item {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  letter-spacing: 0.04em;
 }
 
 /* -------------------------------------------------------

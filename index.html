@@ -10,32 +10,43 @@
     <div class="container">
         <h1>D100 Dice Roller</h1>
 
-        <!-- die display and roll button -->
         <div class="card die-card">
             <div id="die" class="die">?</div>
             <button id="rollBtn">Roll D100</button>
         </div>
 
-        <!-- running statistics -->
         <div class="card stats-card">
             <div class="stat">
                 <span class="stat-label">Average</span>
-                <span id="average" class="stat-value">—</span>
+                <span id="stat-avg" class="stat-value">—</span>
             </div>
             <div class="stat">
-                <span class="stat-label">Total Rolls</span>
-                <span id="count" class="stat-value">0</span>
+                <span class="stat-label">Rolls</span>
+                <span id="stat-count" class="stat-value">0</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Best</span>
+                <span id="stat-max" class="stat-value stat-best">—</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Worst</span>
+                <span id="stat-min" class="stat-value stat-worst">—</span>
             </div>
         </div>
 
-        <!-- roll history -->
         <div class="card history-card">
             <div class="history-header">
-                <h2>History</h2>
+                <h2>History <span class="history-sub">(last 20)</span></h2>
                 <button id="clearBtn" class="clear-btn">Clear</button>
             </div>
             <div id="history" class="history-list">
                 <p class="no-history">No rolls yet</p>
+            </div>
+            <div class="legend">
+                <span class="legend-item roll-critical">96–100 Critical</span>
+                <span class="legend-item roll-decent">65–95 Decent</span>
+                <span class="legend-item roll-lame">6–64 Lame</span>
+                <span class="legend-item roll-fumble">1–5 Fumble</span>
             </div>
         </div>
     </div>

@@ -1,96 +1,70 @@
-/* -------------------------------------------------------
- * Cookie helpers
- * ------------------------------------------------------- */
-
-function setCookieValue(cookieName, value, expiryDays)
-{
-    const d = new Date();
-    d.setTime(d.getTime() + (expiryDays * 24 * 60 * 60 * 1000));
-    const expires = "expires=" + d.toUTCString();
-    document.cookie = cookieName + "=" + encodeURIComponent(value) + ";" + expires + ";path=/;SameSite=Strict";
-}
-
-function getCookieValue(cookieName)
-{
-    const name = cookieName + "=";
-    const decodedCookie = decodeURIComponent(document.cookie);
-    const cookieArray = decodedCookie.split(';');
-
-    for (let i = 0; i < cookieArray.length; i++)
-    {
-        let c = cookieArray[i].trimStart();
-        if (c.indexOf(name) === 0)
-        {
-            return c.substring(name.length, c.length);
-        }
-    }
-    return "";
-}
-
-/* -------------------------------------------------------
- * History stored in a cookie as a comma-separated list
- * e.g. "45,67,23,89,12"  (newest at the end)
- * ------------------------------------------------------- */
-
-const HISTORY_COOKIE = 'dice_history';
-const MAX_HISTORY    = 20;
-const COOKIE_DAYS    = 365;
+const STORAGE_KEY = 'dice_history';
+const MAX_HISTORY = 20;
 
 function getHistory()
 {
-    const val = getCookieValue(HISTORY_COOKIE);
-    if (!val) return [];
-    return val.split(',').map(Number);
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+    catch { return []; }
 }
 
 function saveHistory(history)
 {
-    setCookieValue(HISTORY_COOKIE, history.join(','), COOKIE_DAYS);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
 }
 
 function addRoll(roll)
 {
     const history = getHistory();
     history.push(roll);
-    if (history.length > MAX_HISTORY)
-    {
-        history.shift();
-    }
+    if (history.length > MAX_HISTORY) history.shift();
     saveHistory(history);
     return history;
 }
 
 function clearHistory()
 {
-    setCookieValue(HISTORY_COOKIE, '', -1);
+    localStorage.removeItem(STORAGE_KEY);
 }
 
 /* -------------------------------------------------------
  * Statistics
  * ------------------------------------------------------- */
 
-function getAverage(history)
+function getStats(history)
 {
-    if (history.length === 0) return null;
+    if (history.length === 0) return { avg: null, min: null, max: null };
     const sum = history.reduce((a, b) => a + b, 0);
-    return parseFloat((sum / history.length).toFixed(2));
+    return {
+        avg: parseFloat((sum / history.length).toFixed(2)),
+        min: Math.min(...history),
+        max: Math.max(...history),
+    };
 }
 
 /* -------------------------------------------------------
  * UI helpers
  * ------------------------------------------------------- */
 
-/*
- * colour-codes a roll badge based on its value
- * 90-100: critical (red)  |  70-89: high (amber)
- * 40-69:  mid (green)     |  1-39:  low (indigo)
- */
+const ROLL_TIERS = [
+    { min: 96,  cls: 'roll-critical' },
+    { min: 65,  cls: 'roll-decent'   },
+    { min:  6,  cls: 'roll-lame'     },
+    { min:  1,  cls: 'roll-fumble'   },
+];
+
 function getRollClass(n)
 {
-    if (n >= 90) return 'roll-critical';
-    if (n >= 70) return 'roll-high';
-    if (n >= 40) return 'roll-mid';
-    return 'roll-low';
+    return ROLL_TIERS.find(t => n >= t.min).cls;
+}
+
+const DIE_RESULT_CLASSES = ['die-critical', 'die-decent', 'die-lame', 'die-fumble'];
+
+function applyDieResult(dieEl, roll)
+{
+    dieEl.classList.remove('rolling', ...DIE_RESULT_CLASSES);
+    void dieEl.offsetWidth;
+    const tier = getRollClass(roll).replace('roll-', 'die-');
+    dieEl.classList.add('rolling', tier);
 }
 
 function renderHistory(history)
@@ -101,8 +75,6 @@ function renderHistory(history)
         el.innerHTML = '<p class="no-history">No rolls yet</p>';
         return;
     }
-
-    // show newest first
     el.innerHTML = history.slice().reverse().map((n, idx) =>
         `<span class="roll-badge ${getRollClass(n)}${idx === 0 ? ' roll-latest' : ''}" title="Roll: ${n}">${n}</span>`
     ).join('');
@@ -110,9 +82,12 @@ function renderHistory(history)
 
 function renderStats(history)
 {
-    const avg = getAverage(history);
-    document.getElementById('average').textContent = avg !== null ? avg : '—';
-    document.getElementById('count').textContent   = history.length;
+    const { avg, min, max } = getStats(history);
+    const dash = '—';
+    document.getElementById('stat-avg').textContent   = avg !== null ? avg  : dash;
+    document.getElementById('stat-count').textContent = history.length;
+    document.getElementById('stat-min').textContent   = min !== null ? min  : dash;
+    document.getElementById('stat-max').textContent   = max !== null ? max  : dash;
 }
 
 function refreshUI(history)
@@ -122,7 +97,7 @@ function refreshUI(history)
 }
 
 /* -------------------------------------------------------
- * Roll – pure JavaScript, no server needed
+ * Roll
  * ------------------------------------------------------- */
 
 function naturalRoll()
@@ -131,37 +106,28 @@ function naturalRoll()
 }
 
 /* -------------------------------------------------------
- * Initialise on DOMContentLoaded
+ * Init
  * ------------------------------------------------------- */
 
-document.addEventListener('DOMContentLoaded', function()
+document.addEventListener('DOMContentLoaded', function ()
 {
-    // populate stats from saved cookie history on page load
     refreshUI(getHistory());
 
-    // roll button
-    document.getElementById('rollBtn').addEventListener('click', function()
+    document.getElementById('rollBtn').addEventListener('click', function ()
     {
-        const roll = naturalRoll();
-
-        // animate the die
+        const roll  = naturalRoll();
         const dieEl = document.getElementById('die');
-        dieEl.classList.remove('rolling');
-        // force reflow so the animation restarts if clicked rapidly
-        void dieEl.offsetWidth;
-        dieEl.classList.add('rolling');
+        applyDieResult(dieEl, roll);
         dieEl.textContent = roll;
-
-        // save and refresh UI
         refreshUI(addRoll(roll));
     });
 
-    // clear history button
-    document.getElementById('clearBtn').addEventListener('click', function()
+    document.getElementById('clearBtn').addEventListener('click', function ()
     {
         clearHistory();
         refreshUI([]);
-        document.getElementById('die').textContent = '?';
-        document.getElementById('die').classList.remove('rolling');
+        const dieEl = document.getElementById('die');
+        dieEl.textContent = '?';
+        dieEl.classList.remove('rolling', ...DIE_RESULT_CLASSES);
     });
 });
